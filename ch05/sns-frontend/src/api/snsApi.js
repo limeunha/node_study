@@ -15,7 +15,7 @@ const snsApi = axios.create({
 export const registerUser = async (userData) => {
    try {
       // userData : 회원가입 창에서 입력한 데이터
-      const response = await snsApi.post('/auth.join', userData)
+      const response = await snsApi.post('/auth/join', userData)
       return response
    } catch (error) {
       console.error(`API Request 오류 : ${error.message}`)
