@@ -25,6 +25,7 @@ sequelize
    })
    .catch((err) => {
       console.error(err) //연결 실패시 오류 출력
+     
    })
 
 //미들웨어 설정
@@ -39,6 +40,7 @@ app.use(express.static(path.join(__dirname, 'uploads'))) // 정적 파일 제공
 app.use(express.json()) // JSON 데이터 파싱
 app.use(express.urlencoded({ extended: false })) // URL-encoded 데이터 파싱
 app.use(cookieParser(process.env.COOKIE_SECRET)) //쿠키 설정
+
 //세션 설정
 app.use(
    session({
