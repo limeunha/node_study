@@ -25,7 +25,6 @@ sequelize
    })
    .catch((err) => {
       console.error(err) //연결 실패시 오류 출력
-     
    })
 
 //미들웨어 설정
@@ -40,7 +39,6 @@ app.use(express.static(path.join(__dirname, 'uploads'))) // 정적 파일 제공
 app.use(express.json()) // JSON 데이터 파싱
 app.use(express.urlencoded({ extended: false })) // URL-encoded 데이터 파싱
 app.use(cookieParser(process.env.COOKIE_SECRET)) //쿠키 설정
-
 //세션 설정
 app.use(
    session({
@@ -73,6 +71,9 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
    const statusCode = err.status || 500 // err.status가 있으면 err.status 저장 없으면 500
    const errorMessage = err.message || '서버 내부 오류'
+
+   //개발 중에 서버 콘솔에서 상세한 에러 확인 용도
+   console.log(err)
 
    res.status(statusCode).json({
       success: false,

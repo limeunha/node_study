@@ -14,23 +14,23 @@ const snsApi = axios.create({
 //회원가입
 export const registerUser = async (userData) => {
    try {
-      // userData : 회원가입 창에서 입력한 데이터
+      // userData: 회원가입 창에서 입력한 데이터
       const response = await snsApi.post('/auth/join', userData)
       return response
    } catch (error) {
-      console.error(`API Request 오류 : ${error.message}`)
-      throw error //request 할때 오류 발생시 에러를 registerUser()함수를 실행한 곳으로 던짐
+      console.error(`API Request 오류: ${error.message}`)
+      throw error //request 할때 오류 발생시 에러를 registerUser() 함수를 실행한 곳으로 던짐
    }
 }
 
 //로그인
-export const loginUser = async (Credential) => {
+export const loginUser = async (credentials) => {
    try {
-      const response = await snsApi.post('/auth/login', Credential)
+      const response = await snsApi.post('/auth/login', credentials)
       return response
    } catch (error) {
-      console.error(`API Request 오류 : ${error.message}`)
-      throw error // request할 때 오류 발생시 에러를 registerUser() 함수를 실행한 곳으로 던짐
+      console.error(`API Request 오류: ${error.message}`)
+      throw error
    }
 }
 
@@ -40,7 +40,18 @@ export const logoutUser = async () => {
       const response = await snsApi.get('/auth/logout')
       return response
    } catch (error) {
-      console.error(`API Request 오류 : ${error.message}`)
-      throw error // request할 때 오류 발생시 에러를 registerUser() 함수를 실행한 곳으로 던짐
+      console.error(`API Request 오류: ${error.message}`)
+      throw error
+   }
+}
+
+//로그인 상태 확인
+export const checkAuthStatus = async () => {
+   try {
+      const response = await snsApi.get('/auth/status')
+      return response
+   } catch (error) {
+      console.error(`API Request 오류: ${error.message}`)
+      throw error
    }
 }
