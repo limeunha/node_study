@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react'
+import React, { useState, useCallback } from 'react'
 import { TextField, Button, Box } from '@mui/material'
 
 // 등록, 수정 폼 컴포넌트
@@ -39,7 +39,35 @@ const PostForm = ({ onSubmit, initialValues = {} }) => {
    }, [])
 
    //작성한 내용 전송
-   const handleSubmit = useCallback((e) => {}, [])
+   const handleSubmit = useCallback(
+      (e) => {
+         e.preventDefault()
+
+         if (!content.trim()) {
+            alert('내용을 입력하세요.')
+            return
+         }
+
+         if (!hashtags.trim()) {
+            alert('해시태그를 입력하세요')
+            return
+         }
+
+         if (!imgFile) {
+            alert('이미지 파일을 추가하세요')
+            return
+         }
+
+         const formData = new FormData() // FormData : 폼데이터를 쉽게 생성하고 전송할 수 있도록 하는 객체
+         formData.append('content', content) // 게시물 내용 추가
+         formData.append('hashtags', hashtags) // 해시태그 추가
+         formData.append('img', imgFile) // 이미지 파일 추가
+
+         //PostCreatePage.jsx 의 handleSubmit() 함수 실행시킴
+         onSubmit(formData) //formData 객체를 전송
+      },
+      [content, hashtags, imgFile, onSubmit]
+   )
 
    return (
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }} encType="multipart/form-data">

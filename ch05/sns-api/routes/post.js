@@ -57,7 +57,8 @@ router.post('/', isLoggedIn, upload.single('img'), async (req, res) => {
        req.body.hashtags = '즐거운 #여행 #맛집'
        hastag:['즐거운 #여행 #맛집']
        */
-      const hashtag = req.body.hashtags.match(/#[^\s#]*/g) //#을 기준으로 해시태그 추출
+
+      const hashtags = req.body.hashtags.match(/#[^\s#]*/g) //#을 기준으로 해시태그 추출
 
       //추출된 해시태그가 있으면
       if (hashtags) {
