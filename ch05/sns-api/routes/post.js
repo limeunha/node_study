@@ -22,12 +22,14 @@ const upload = multer({
          cb(null, 'uploads/') // uploads폴더에 저장
       },
       filename(req, file, cb) {
-         const ext = path.extname(file.originalname) //파일 확장자 추출
+         const decodedFileName = decodeURIComponent(file.originalname) //파일명 디코딩(한글 파일명 깨짐 방지) => 제주도.jpg
+         const ext = path.extname(decodedFileName) //확장자 추출
+         const basename = path.basename(decodedFileName, ext) //확장자 제거한 파일명 추출
 
          // 파일명 설정: 기존이름 + 업로드 날짜시간 + 확장자
          // dog.jpg
          // ex) dog + 1231342432443 + .jpg
-         cb(null, path.basename(file.originalname, ext) + Date.now() + ext)
+         cb(null, basename + Date.now() + ext)
       },
    }),
    // 파일의 크기 제한

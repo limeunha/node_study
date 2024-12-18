@@ -12,7 +12,15 @@ export const createPostThunk = createAsyncThunk('posts/createPost', async (postD
 })
 
 // 게시물 수정
-export const updatePostThunk = createAsyncThunk('posts/updatePost', async (data, { rejectWithValue }) => {})
+export const updatePostThunk = createAsyncThunk('posts/updatePost', async (data, { rejectWithValue }) => {
+   try {
+      const { id, postData } = data
+      const response = await updatePost(id, postData)
+      return response.data.post
+   } catch (error) {
+      return rejectWithValue(error.response?.data?.message || '게시물 삭제 실패')
+   }
+})
 
 // 게시물 삭제
 export const deletePostThunk = createAsyncThunk('posts/deletePost', async (id, { rejectWithValue }) => {
@@ -108,6 +116,20 @@ const postSlice = createSlice({
             state.loading = false
          })
          .addCase(deletePostThunk.rejected, (state, action) => {
+            state.loading = false
+            state.error = action.payload
+         })
+
+      // 게시물 수정
+      builder
+         .addCase(updatePostThunk.pending, (state) => {
+            state.loading = true
+            state.error = null
+         })
+         .addCase(updatePostThunk.fulfilled, (state, action) => {
+            state.loading = false
+         })
+         .addCase(updatePostThunk.rejected, (state, action) => {
             state.loading = false
             state.error = action.payload
          })
