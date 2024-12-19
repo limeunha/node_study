@@ -137,6 +137,21 @@ router.put('/:id', isLoggedIn, upload.single('img'), async (req, res) => {
 
       // 게시물에서 해시태그를 추출해서 존재하는 해시태그는 유지하고 새로운 해시태그를 넣어준다
       const hashtags = req.body.hashtags.match(/#[^\s#]*/g) // #을 기준으로 해시태그 추출
+
+      if (hashtags) {
+         const result = await Promise.all(
+            hashtags.map((tag) =>
+               Hashtag.findOrCreate({
+                  where: { title: tag.slice(1) },
+               })
+            )
+         )
+
+         await post.setHashtags(result.map((r) => r[0]))
+      }
+
+      // 해시태그 수정시 해시태그 갯수를 줄일때 수정안되는 문제 해결
+      /*
       if (hashtags) {
          const result = await Promise.all(
             hashtags.map((tag) =>
@@ -146,8 +161,12 @@ router.put('/:id', isLoggedIn, upload.single('img'), async (req, res) => {
             )
          )
 
-         await post.addHashtags(result.map((r) => r[0])) //기존 해시태그를 새 해시태그로 교체
+         await post.setHashtags(result.map((r) => r[0])) // 새 해시태그로 교체 (기존 관계 자동 삭제)
+      } else {
+         // 해시태그가 모두 삭제된 경우, 모든 해시태그 연결을 해제
+         await post.setHashtags([]) // 교차 테이블의 모든 관계를 삭제
       }
+      */
 
       //업데이트 된 게시물 다시 조회
       const updatedPost = await Post.findOne({

@@ -59,7 +59,7 @@ export const checkAuthStatus = async () => {
 //포스트 등록
 export const createPost = async (postData) => {
    try {
-      //postData : 등록할 게시물 데이터가 담겨있는 json객체
+      //postData: 등록할 게시물 데이터가 담겨있는 json객체
 
       const config = {
          headers: {
@@ -78,7 +78,7 @@ export const createPost = async (postData) => {
 //포스트 수정
 export const updatePost = async (id, postData) => {
    try {
-      //postData : 등록할 게시물 데이터가 담겨있는 json객체
+      //postData: 수정할 게시물 데이터가 담겨있는 json객체
 
       const config = {
          headers: {
@@ -120,6 +120,39 @@ export const getPostById = async (id) => {
 export const getPosts = async (page) => {
    try {
       const response = await snsApi.get(`/post?page=${page}`)
+      return response
+   } catch (error) {
+      console.error(`API Request 오류: ${error.message}`)
+      throw error
+   }
+}
+
+// 내 프로필 가져오기
+export const getProfile = async () => {
+   try {
+      const response = await snsApi.get(`/page/profile`)
+      return response
+   } catch (error) {
+      console.error(`API Request 오류: ${error.message}`)
+      throw error
+   }
+}
+
+// 특정 사용자 프로필 가져오기
+export const getProfileId = async (id) => {
+   try {
+      const response = await snsApi.get(`/page/profile/${id}`)
+      return response
+   } catch (error) {
+      console.error(`API Request 오류: ${error.message}`)
+      throw error
+   }
+}
+
+// 사용자를 팔로우
+export const followUser = async (id) => {
+   try {
+      const response = await snsApi.post(`/user/${id}/follow`)
       return response
    } catch (error) {
       console.error(`API Request 오류: ${error.message}`)

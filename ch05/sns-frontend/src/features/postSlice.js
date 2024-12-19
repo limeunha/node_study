@@ -119,7 +119,6 @@ const postSlice = createSlice({
             state.loading = false
             state.error = action.payload
          })
-
       // 게시물 수정
       builder
          .addCase(updatePostThunk.pending, (state) => {

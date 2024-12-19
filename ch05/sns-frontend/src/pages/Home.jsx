@@ -13,7 +13,7 @@ const Home = ({ isAuthenticated, user }) => {
       dispatch(fetchPostsThunk(page))
    }, [dispatch, page])
 
-   //페이지 변경
+   // 페이지 변경
    const handlePageChange = useCallback((event, value) => {
       setPage(value)
    }, [])
@@ -24,13 +24,15 @@ const Home = ({ isAuthenticated, user }) => {
             Home Feed
          </Typography>
 
-         <Typography variant="body1" align="center">
-            로딩 중...
-         </Typography>
+         {loading && (
+            <Typography variant="body1" align="center">
+               로딩 중...
+            </Typography>
+         )}
 
          {error && (
             <Typography variant="body1" align="center" color="error">
-               에러 발생:{error}
+               에러 발생: {error}
             </Typography>
          )}
 
@@ -41,8 +43,8 @@ const Home = ({ isAuthenticated, user }) => {
                ))}
                <Stack spacing={2} sx={{ mt: 3, alignItems: 'center' }}>
                   <Pagination
-                     count={pagination.totalPages} //총 페이지수
-                     page={page} //현재페이지
+                     count={pagination.totalPages} // 총 페이지 수
+                     page={page} // 현재 페이지
                      onChange={handlePageChange} //페이지를 변경할 함수
                   />
                </Stack>
