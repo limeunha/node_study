@@ -3,14 +3,19 @@ import { Route, Routes } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { checkAuthStatusThunk } from './features/authSlice'
 import { useEffect } from 'react'
+import { Toolbar } from '@mui/material'
 
 import Navbar from './components/shared/Navbar'
 import Footer from './components/shared/Footer'
 import SignupPage from './pages/SignupPage'
 import LoginPage from './pages/LoginPage'
 import Home from './pages/Home'
+import ItemCreatePage from './pages/ItemCreatePage'
+import ItemEditPage from './pages/ItemEditPage'
+import ItemListPage from './pages/ItemListPage'
 
 import RedirectLoginRoute from './components/auth/RedirectLoginRoute'
+import AdminRoute from './components/auth/AdminRoute'
 
 function App() {
    const dispatch = useDispatch()
@@ -24,6 +29,8 @@ function App() {
    return (
       <>
          <Navbar isAuthenticated={isAuthenticated} user={user} />
+         {/* 메뉴에 아래 컨텐츠가 가려져서 보이는 문제 해결 -> Appbar 높이만큼 여백추가 */}
+         <Toolbar />
          <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/signup" element={<SignupPage />} />
@@ -34,6 +41,37 @@ function App() {
                   <RedirectLoginRoute>
                      <LoginPage />
                   </RedirectLoginRoute>
+               }
+            />
+
+            {/* 상품 등록 */}
+            <Route
+               path="/items/create"
+               element={
+                  // 관리자가 아닐경우 home으로 리다이렉트
+                  <AdminRoute>
+                     <ItemCreatePage />
+                  </AdminRoute>
+               }
+            />
+            {/* 상품 수정 */}
+            <Route
+               path="/items/edit/:id"
+               element={
+                  // 관리자가 아닐경우 home으로 리다이렉트
+                  <AdminRoute>
+                     <ItemEditPage />
+                  </AdminRoute>
+               }
+            />
+            {/* 상품리스트 */}
+            <Route
+               path="/items/createlist"
+               element={
+                  // 관리자가 아닐경우 home으로 리다이렉트
+                  <AdminRoute>
+                     <ItemListPage />
+                  </AdminRoute>
                }
             />
          </Routes>
