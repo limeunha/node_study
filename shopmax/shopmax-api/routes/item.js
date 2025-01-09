@@ -2,6 +2,7 @@ const express = require('express')
 const multer = require('multer')
 const path = require('path')
 const fs = require('fs')
+const { Op } = require('sequelize')
 const { isAdmin } = require('./middlewares')
 const { Item, Img } = require('../models')
 const router = express.Router()
@@ -79,6 +80,112 @@ router.post('/', isAdmin, upload.array('img'), async (req, res) => {
    } catch (error) {
       console.error(error)
       res.status(500).json({ success: false, message: '상품 등록 중 오류가 발생했습니다.', error })
+   }
+})
+
+// 전체 상품 불러오기(페이징, 검색 기능)
+
+// localhost:8000/item?page=1&limit=3&sellCategory=SELL&searchTerm=가방&searchCategory=itemNm => 판매중인 상품 중에서 상품명 '가방 '으로 검색
+
+// localhost:8000/item?page=1&limit=3&sellCategory=SOLD_OUT&searchTerm=가방&searchCategory=itemDetail => 품절된 상품 중에서 상품설명 '가방'으로 검색
+router.get('/', async (req, res) => {
+   try {
+      const page = parseInt(req.query.page, 10) || 1
+      const limit = parseInt(req.query.limit, 10) || 5
+      const offset = (page - 1) * limit
+
+      // 판매상태, 상품명, 상품설명으로 검색
+      const searchTerm = req.query.searchTerm || '' // 사용자가 입력한 검색어
+      const searchCategory = req.query.searchCategory || 'itemNm' // 상품명 or 상품설명으로 검색
+      const sellCategory = req.query.sellCategory // 판매상태('SELL' 또는 'SOLD_OUT'만 존재)
+
+      /*
+         스프레드 연산자(...)를 사용하는 이유는 조건적으로 객체를 추가하기 위해서
+         스프레드 연산자는 "", false, 0, null, undefined 와 같은 falsy값들은 무시하고
+         값이 true 일때는 반환된 객체를 추가
+      */
+
+      // 조건부 where 절을 만드는 객체
+      const whereClause = {
+         //searchTerm이 존재하면 해당 검색어(searchTerm이)가 포함된 검색 범주(searchCategory)를 조건으로 추가
+         ...(searchTerm && {
+            [searchCategory]: {
+               [Op.like]: `%${searchTerm}%`,
+            },
+         }),
+         //sellCategory가 존재하면 itemSellStatus가 해당 판매 상태와 일치하는 항목을 조건으로 추가
+         ...(sellCategory && {
+            itemSellStatus: sellCategory,
+         }),
+      }
+
+      // localhost:8000/item?page=1&limit=3&sellCategory=SOLD_OUT&searchTerm=가방&searchCategory=itemDetail => 품절된 상품 중에서 상품설명 '가방'으로 검색
+
+      /*
+         whereClause = {
+         itemDetail: {
+            [Op.like]: '운동화'
+         },
+         {itemSellStatus: 'SOLD_OUT'}
+         }
+      */
+
+      const count = await Item.count({
+         where: whereClause,
+      })
+
+      const items = await Item.findAll({
+         where: whereClause,
+         limit,
+         offset,
+         order: [['createdAt', 'DESC']],
+         include: [
+            {
+               model: Img,
+               attributes: ['id', 'oriImgName', 'imgUrl', 'repImgYn'],
+            },
+         ],
+      })
+
+      res.json({
+         success: true,
+         message: '상품 목록 조회 성공',
+         items,
+         pagination: {
+            totalItems: count,
+            totalPages: Math.ceil(count / limit),
+            currentPage: page,
+            limit,
+         },
+      })
+   } catch (error) {
+      console.error(error)
+      res.status(500).json({ success: false, message: '상품 목록 조회 중 오류가 발생했습니다.', error })
+   }
+})
+
+// 상품 삭제 localhost:8000/item/:id
+router.delete('/:id', isAdmin, async (req, res) => {
+   try {
+      const { id } = req.params //상품 id
+
+      //상품이 존재하는지 확인
+      const item = await Item.findByPk(id)
+
+      if (!item) {
+         return res.status(404).json({ success: false, message: '상품을 찾을 수 없습니다.' })
+      }
+
+      // 상품 삭제 (연관된 이미지도 삭제됨 - CASCADE 설정)
+      await item.destroy()
+
+      res.json({
+         success: true,
+         message: '상품이 성공적으로 삭제되었습니다.',
+      })
+   } catch (error) {
+      console.error(error)
+      res.status(500).json({ success: false, message: '상품 삭제 중 오류가 발생했습니다.', error })
    }
 })
 
