@@ -13,6 +13,7 @@ import Home from './pages/Home'
 import ItemCreatePage from './pages/ItemCreatePage'
 import ItemEditPage from './pages/ItemEditPage'
 import ItemListPage from './pages/ItemListPage'
+import ItemSellDetailPage from './pages/ItemSellDetailPage'
 
 import RedirectLoginRoute from './components/auth/RedirectLoginRoute'
 import AdminRoute from './components/auth/AdminRoute'
@@ -34,6 +35,7 @@ function App() {
          <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/items/detail/:id" element={<ItemSellDetailPage />} />
             <Route
                path="/login"
                element={
