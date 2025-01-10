@@ -4,14 +4,21 @@ import { formatWithComma, stripComma } from '../../utils/priceSet'
 
 function ItemForm({ onSubmit, initialValues = {} }) {
    // 이미지가 여러개 이므로 배열로 다룬다
-   const [imgUrls, setImgUrls] = useState([]) // 이미지 경로
+   /*
+    [
+      'http://localhost:8000/ap_31736383153088.png',
+      'http://localhost:8000/model_11736383153094.png',
+      'http://localhost:8000/model_61736383153113.png',
+    ]
+   */
+   const [imgUrls, setImgUrls] = useState(initialValues.Imgs ? initialValues.Imgs.map((img) => process.env.REACT_APP_API_URL + img.imgUrl) : []) // 이미지 경로
    const [imgFiles, setImgFiles] = useState([]) // 이미지 파일 객체
 
-   const [itemNm, setItemNm] = useState('') // 상품명
-   const [price, setPrice] = useState('') // 가격
-   const [stockNumber, setStockNumber] = useState('') // 재고
-   const [itemSellStatus, setItemSellStatus] = useState('SELL') // 판매상태
-   const [itemDetail, setItemDetail] = useState('') // 상품설명
+   const [itemNm, setItemNm] = useState(initialValues.itemNm || '') // 상품명
+   const [price, setPrice] = useState(initialValues.price ? String(initialValues.price) : '') // 가격
+   const [stockNumber, setStockNumber] = useState(initialValues.stockNumber || '') // 재고
+   const [itemSellStatus, setItemSellStatus] = useState(initialValues.itemSellStatus || 'SELL') // 판매상태
+   const [itemDetail, setItemDetail] = useState(initialValues.itemDetail || '') // 상품설명
 
    // 이미지 파일 변경(이미지 미리보기, 이미지 파일 객체를 imgFiles에 저장)
    const handleImageChange = useCallback((e) => {

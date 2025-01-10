@@ -189,4 +189,86 @@ router.delete('/:id', isAdmin, async (req, res) => {
    }
 })
 
+// 특정 상품 불러오기(id로 상품 조회) localhost:8000/item/:id
+router.get('/:id', async (req, res) => {
+   try {
+      const { id } = req.params
+
+      const item = await Item.findOne({
+         where: { id }, // 특정 상품 id로 상품 조회
+         include: [
+            {
+               model: Img, // 연관된 이미지 포함
+               attributes: ['id', 'oriImgName', 'imgUrl', 'repImgYn'], //특정 컬럼만 선택
+            },
+         ],
+      })
+
+      if (!item) {
+         return res.status(404).json({ success: false, message: '해당 상품을 찾을 수 없습니다.' })
+      }
+
+      res.json({
+         success: true,
+         message: '상품 조회 성공',
+         item,
+      })
+   } catch (error) {
+      console.error(error)
+      res.status(500).json({ success: false, message: '상품 조회 중 오류가 발생했습니다.', error })
+   }
+})
+
+// 상품 수정 localhost:8000/item/:id
+router.put('/:id', isAdmin, upload.array('img'), async (req, res) => {
+   try {
+      const { id } = req.params
+      const { itemNm, price, stockNumber, itemDetail, itemSellStatus } = req.body
+
+      // 상품이 존재하는지 확인
+      const item = await Item.findByPk(id)
+      if (!item) {
+         return res.status(404).json({ success: false, message: '상품을 찾을 수 없습니다.' })
+      }
+
+      await item.update({
+         itemNm,
+         price,
+         stockNumber,
+         itemDetail,
+         itemSellStatus,
+      })
+
+      // 수정할 이미지가 존재하는 경우
+      if (req.files && req.files.length > 0) {
+         // 기존 이미지 삭제
+         await Img.destroy({ where: { itemId: id } })
+
+         // 새 이미지 추가
+         const images = req.files.map((file) => ({
+            oriImgName: file.originalname, //원본 이미지명
+            imgUrl: `/${file.filename}`, //이미지 경로
+            repImgYn: 'N', // 기본적으로 'N' 설정
+            itemId: item.id, // 생성된 상품 ID 연결
+         }))
+
+         // 첫 번째 이미지는 대표 이미지로 설정
+         if (images.length > 0) {
+            images[0].repImgYn = 'Y'
+         }
+
+         // 이미지 여러개 insert
+         await Img.bulkCreate(images)
+      }
+
+      res.json({
+         success: true,
+         message: '상품과 이미지가 성공적으로 수정되었습니다.',
+      })
+   } catch (error) {
+      console.error(error)
+      res.status(500).json({ success: false, message: '상품 수정 중 오류가 발생했습니다.', error })
+   }
+})
+
 module.exports = router
