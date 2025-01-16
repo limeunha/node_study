@@ -22,6 +22,7 @@ module.exports = class Cart extends Sequelize.Model {
 
       //1:n관계 설정
       Cart.hasMany(db.CartItem, { foreignKey: 'cartId', sourceKey: 'id', onDelete: 'CASCADE' })
+
       //교차테이블 관계 설정
       Cart.belongsToMany(db.Item, { through: db.CartItem, foreignKey: 'cartId', otherKey: 'itemId' })
    }
