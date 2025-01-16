@@ -112,4 +112,66 @@ router.post('/', isLoggedIn, async (req, res) => {
    }
 })
 
+// 주문 목록(페이징)
+// localhost:8000/order/list?page=1&limit=5&startDate=2025-01-01&endDate=2025-01-16
+router.get('/list', isLoggedIn, async (req, res) => {
+   try {
+      const page = parseInt(req.query.page, 10) || 1
+      const limit = parseInt(req.query.limit, 10) || 5
+      const offset = (page - 1) * limit
+      const startDate = req.query.startDate // YYYY-MM-DD 00:00:00
+      const endDate = req.query.endDate
+      const endDateTime = `${endDate} 23:59:59` // 년월일만 받을시 시분초는 00:00:00으로 인식하므로 시간 변경(endDate 날짜에 주문한 내용도 검색되도록)
+
+      const count = await Order.count({
+         where: {
+            userId: req.user.id, //주문자 id
+            ...(startDate && endDate ? { orderDate: { [Op.between]: [startDate, endDateTime] } } : {}), // 날짜 검색
+         },
+      })
+
+      const orders = await Order.findAll({
+         where: {
+            userId: req.user.id, //주문자 id
+            ...(startDate && endDate ? { orderDate: { [Op.between]: [startDate, endDateTime] } } : {}), // 날짜 검색
+         },
+         limit: parseInt(limit),
+         offset: parseInt(offset),
+         include: [
+            {
+               model: Item,
+               attributes: ['id', 'itemNm', 'price'],
+               // 교차테이블 데이터(OrderItem 테이블 에서 필요한 컬럼 선택)
+               through: {
+                  attributes: ['count', 'orderPrice'],
+               },
+               include: [
+                  {
+                     model: Img,
+                     attributes: ['imgUrl'],
+                     where: { repImgYn: 'Y' }, // 대표이미지만 가져온다
+                  },
+               ],
+            },
+         ],
+         order: [['orderDate', 'DESC']], // 최근 주문내역이 먼저 오도록
+      })
+
+      res.json({
+         success: true,
+         message: '주문 목록 조회 성공',
+         orders,
+         pagination: {
+            totalOrders: count,
+            totalPages: Math.ceil(count / limit),
+            currentPage: page,
+            limit,
+         },
+      })
+   } catch (error) {
+      console.error(error)
+      res.status(500).json({ success: false, message: '주문 내역 조회 중 오류가 발생했습니다.', error })
+   }
+})
+
 module.exports = router
