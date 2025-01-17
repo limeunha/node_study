@@ -2,11 +2,11 @@ const express = require('express')
 const router = express.Router()
 const { sequelize } = require('../models')
 const { Order, Item, User, OrderItem, Img } = require('../models')
-const { isLoggedIn } = require('./middlewares')
+const { isLoggedIn, verifyToken } = require('./middlewares')
 const { Op } = require('sequelize')
 
 // 주문 localhost:8000/order
-router.post('/', isLoggedIn, async (req, res) => {
+router.post('/', verifyToken, isLoggedIn, async (req, res) => {
    /* ★트랜잭션 처리: 주문 처리 중 에러 발생시 차감된 재고를 복구하지 않으면 데이터가 
      불일치 상태가 되므로 트랜잭션 처리 
  
@@ -114,7 +114,7 @@ router.post('/', isLoggedIn, async (req, res) => {
 
 // 주문 목록(페이징)
 // localhost:8000/order/list?page=1&limit=5&startDate=2025-01-01&endDate=2025-01-16
-router.get('/list', isLoggedIn, async (req, res) => {
+router.get('/list', verifyToken, isLoggedIn, async (req, res) => {
    try {
       const page = parseInt(req.query.page, 10) || 1
       const limit = parseInt(req.query.limit, 10) || 5
@@ -171,6 +171,90 @@ router.get('/list', isLoggedIn, async (req, res) => {
    } catch (error) {
       console.error(error)
       res.status(500).json({ success: false, message: '주문 내역 조회 중 오류가 발생했습니다.', error })
+   }
+})
+
+// 주문 취소 localhost:8000/order/cancel/:id
+router.post('/cancel/:id', verifyToken, isLoggedIn, async (req, res) => {
+   const transaction = await sequelize.transaction()
+
+   try {
+      const { id } = req.params
+
+      const order = await Order.findByPk(id, {
+         include: [
+            {
+               model: OrderItem,
+               include: [{ model: Item }],
+            },
+         ],
+         transaction, //트랜잭션 사용
+      })
+
+      // 주문내역이 없다면
+      if (!order) {
+         return res.status(404).json({
+            success: false,
+            message: '주문 내역이 존재하지 않습니다.',
+         })
+      }
+
+      // 이미 취소된 주문이라면
+      if (order.orderStatus === 'CANCEL') {
+         return res.status(400).json({
+            success: false,
+            message: '이미 취소된 주문입니다.',
+         })
+      }
+
+      // 재고복구
+      for (const orderItem of order.OrderItems) {
+         const product = orderItem.Item
+         product.stockNumber += orderItem.count // 주문한 갯수 만큼 다시 재고에 더해줌
+         await product.save({ transaction }) //트랜잭션 사용
+      }
+
+      //주문 상태 변경
+      order.orderStatus = 'CANCEL'
+      await order.save({ transaction }) //트랜잭션 사용
+
+      await transaction.commit() //트랜잭션 커밋
+
+      res.json({
+         success: true,
+         message: '주문이 성공적으로 취소되었습니다.',
+      })
+   } catch (error) {
+      await transaction.rollback() //트랜잭션 롤백
+      console.error(error)
+      res.status(500).json({ success: false, message: '주문 취소 중 오류가 발생했습니다.', error })
+   }
+})
+
+// 주문 삭제 localhost:8000/order/delete/:id
+router.delete('/delete/:id', verifyToken, isLoggedIn, async (req, res) => {
+   try {
+      const { id } = req.params
+
+      const order = await Order.findByPk(id)
+
+      if (!order) {
+         return res.status(404).json({
+            success: false,
+            message: '주문 내역이 존재하지 않습니다.',
+         })
+      }
+
+      // 주문삭제(연관된 OrderItem도 삭제됨 - CASCADE 설정)
+      await Order.destroy({ where: { id: order.id } })
+
+      res.json({
+         success: true,
+         message: '주문 내역이 성공적으로 삭제되었습니다.',
+      })
+   } catch (error) {
+      console.error(error)
+      res.status(500).json({ success: false, message: '주문 삭제 중 오류가 발생했습니다.', error })
    }
 })
 
