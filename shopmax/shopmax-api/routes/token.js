@@ -1,6 +1,6 @@
 const express = require('express')
-module.exports = router
 const router = express.Router()
+module.exports = router
 const jwt = require('jsonwebtoken')
 const { Domain } = require('../models')
 const { isLoggedIn } = require('./middlewares')
